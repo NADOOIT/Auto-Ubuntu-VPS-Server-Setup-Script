@@ -36,7 +36,7 @@ if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
   # ERPNext Setup
   git clone https://github.com/frappe/frappe_docker.git ~/frappe_docker
   cd ~/frappe_docker
-  cp env-example .env
+  cp example.env .env
   echo "ERPNext has been installed."
 fi
 

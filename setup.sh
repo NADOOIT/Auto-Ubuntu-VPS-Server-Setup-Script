@@ -34,8 +34,16 @@ read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
   # ERPNext Setup
-  git clone https://github.com/frappe/frappe_docker.git ~/frappe_docker
-  cd ~/frappe_docker
+  erpnext_dir=~/frappe_docker
+  if [ -d "$erpnext_dir" ]; then
+    echo "Existing directory '$erpnext_dir' found, pulling latest changes..."
+    cd $erpnext_dir
+    git pull
+    cd -
+  else
+    git clone https://github.com/frappe/frappe_docker.git $erpnext_dir
+  fi
+  cd $erpnext_dir
   cp example.env .env
   echo "ERPNext has been installed."
 fi
@@ -65,8 +73,16 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # Clone the repository into user's home directory
     echo "Cloning the repository..."
-    git clone git@github.com:NADOOITChristophBa/nadooit_managmentsystem.git ~/nadooit_managmentsystem
-    cd ~/nadooit_managmentsystem
+    nadooit_dir=~/nadooit_managmentsystem
+    if [ -d "$nadooit_dir" ]; then
+        echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
+        cd $nadooit_dir
+        git pull
+        cd -
+    else
+        git clone git@github.com:NADOOITChristophBa/nadooit_managmentsystem.git $nadooit_dir
+    fi
+    cd $nadooit_dir
     cp .env.example .env
 
     echo "The .env file has been copied. It's recommended to update this file with real production values."
@@ -101,27 +117,13 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         sed -i "s/your_cockroach_db_user/$cockroach_db_user/" .env
         sed -i "s/your_cockroach_db_password/$cockroach_db_password/" .env
         sed -i "s/your_cockroach_db_options/$cockroach_db_options/" .env
+        sed -i "s/your_nadooit_api_key/$nadoecho "Setup completed."
         sed -i "s/your_nadooit_api_key/$nadooit_api_key/" .env
         sed -i "s/your_nadooit_user_code/$nadooit_user_code/" .env
-
-        echo "The .env file has been updated with the provided information."
+        echo ".env file has been updated with the values you entered."
+    else
+        echo "You chose not to update the .env file. Don't forget to do this before you run your application."
     fi
-
-    # Finally, run the docker-compose commands
-    echo "Building the Docker images..."
-    docker-compose -f docker-compose.deploy.yml build
-    docker-compose -f docker-compose.deploy.yml run --rm certbot /opt/certify-init.sh
-
-    echo "Running migrations..."
-    docker-compose -f docker-compose.deploy.yml run --rm app python manage.py migrate
-
-    echo "Creating superuser..."
-    docker-compose -f docker-compose.deploy.yml run --rm app python manage.py createsuperuser
-
-    echo "Starting the server..."
-    docker-compose -f docker-compose.deploy.yml up -d
-
     echo "nadooit_management service has been installed."
 fi
-
-echo "If you chose not to update the .env file, follow the setup instructions in the documentation."
+echo "Setup completed."

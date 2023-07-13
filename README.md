@@ -79,7 +79,13 @@ After preparing your server, you can use the setup script as follows:
 
         It will ask for a location to save the keys and a passphrase for added security. You can press 'Enter' to accept the default location and skip the passphrase, but using a passphrase is recommended for added security.
 
-        After generating the keys, copy your public key to your server with the command:
+        Next, log in to your server and create the `.ssh` directory and the `authorized_keys` file if they don't exist. Use this command:
+
+        ```bash
+        ssh your_username@your_server_ip "mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys"
+        ```
+
+        After that, you can copy your public key to your server with the command:
 
         ```bash
         type $env:USERPROFILE\.ssh\id_rsa.pub | ssh your_username@your_server_ip "cat >> .ssh/authorized_keys"

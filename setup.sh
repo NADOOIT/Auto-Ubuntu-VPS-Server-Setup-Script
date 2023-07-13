@@ -1,4 +1,6 @@
 #!/bin/bash
+CURRENT_USER=$(whoami)
+USER_HOME=$(eval echo ~$CURRENT_USER)
 
 # Early option to skip to service installation
 echo "Do you want to skip to service installation? (Y/n)"
@@ -34,7 +36,7 @@ read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
   # ERPNext Setup
-  erpnext_dir=$HOME/frappe_docker
+  erpnext_dir=$USER_HOME/frappe_docker
   if [ -d "$erpnext_dir" ]; then
     echo "Existing directory '$erpnext_dir' found, pulling latest changes..."
     cd $erpnext_dir

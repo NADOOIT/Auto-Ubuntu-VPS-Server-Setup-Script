@@ -1,6 +1,8 @@
 #!/bin/bash
-CURRENT_USER=$(whoami)
+
+CURRENT_USER=$(logname)
 USER_HOME=$(eval echo ~$CURRENT_USER)
+
 
 # Early option to skip to service installation
 echo "Do you want to skip to service installation? (Y/n)"

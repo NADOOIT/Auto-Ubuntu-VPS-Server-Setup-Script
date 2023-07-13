@@ -97,10 +97,9 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # If user wants to update .env file
     if [[ "$update_env" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
-    
       echo "Please enter the following values for the .env file:"
       read -p "DJANGO_SECRET_KEY: " django_secret_key
-      read -p "DOMAIN (for DJANGO_CSRF_TRUSTED_ORIGINS): " domain
+      read -p "DOMAIN (for DJANGO_CSRF_TRUSTED_ORIGINS): " domain_input
       read -p "ACME_DEFAUT_EMAIL: " acme_default_email
       read -p "COCKROACH_DB_HOST: " cockroach_db_host
       read -p "COCKROACH_DB_NAME: " cockroach_db_name
@@ -112,8 +111,11 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
       read -p "NADOOIT__USER_CODE: " nadooit_user_code
       read -p "OPENAI_API_KEY: " openai_api_key
 
+      # Remove "https://" from domain_input to set the domain variable
+      domain=$(echo "$domain_input" | sed 's#https://##')
+
       sed -i "s#your_secret_key#$django_secret_key#" .env
-      sed -i "s#your_domain#$domain#" .env
+      sed -i "s#your_domain#$domain_input#" .env
       sed -i "s#your_email#$acme_default_email#" .env
       sed -i "s#your_openai_api_key#$openai_api_key#" .env
       sed -i "s#your_cockroach_db_host#$cockroach_db_host#" .env
@@ -124,6 +126,8 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
       sed -i "s#your_cockroach_db_options#$cockroach_db_options#" .env
       sed -i "s#your_nadooit_api_key#$nadooit_api_key#" .env
       sed -i "s#your_nadooit_user_code#$nadooit_user_code#" .env
+
+      # For the DJANGO_ALLOWED_HOSTS field, use the domain without "https://"
       sed -i "s#your_domain,www.your_domain#$domain,www.$domain#" .env
 
       echo ".env file has been updated with the values you entered."

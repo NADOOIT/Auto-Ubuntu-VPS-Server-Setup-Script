@@ -63,10 +63,10 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     # Prompt user to continue after adding the SSH key
     read -p "Press enter to continue once you've added the SSH key to your GitHub account."
 
-    # Clone the repository
+    # Clone the repository into user's home directory
     echo "Cloning the repository..."
-    git clone git@github.com:NADOOITChristophBa/nadooit_managmentsystem.git
-    cd nadooit_managmentsystem
+    git clone git@github.com:NADOOITChristophBa/nadooit_managmentsystem.git ~/nadooit_managmentsystem
+    cd ~/nadooit_managmentsystem
     cp .env.example .env
 
     echo "The .env file has been copied. It's recommended to update this file with real production values."
@@ -90,8 +90,6 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         read -p "NADOOIT__API_KEY: " nadooit_api_key
         read -p "NADOOIT__USER_CODE: " nadooit_user_code
         read -p "OPENAI_API_KEY: " openai_api_key
-
-
 
         sed -i "s/your_secret_key/$django_secret_key/" .env
         sed -i "s/your_domain/$domain/" .env

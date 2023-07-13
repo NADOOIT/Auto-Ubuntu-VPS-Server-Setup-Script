@@ -34,7 +34,7 @@ read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
   # ERPNext Setup
-  erpnext_dir=~/frappe_docker
+  erpnext_dir=$HOME/frappe_docker
   if [ -d "$erpnext_dir" ]; then
     echo "Existing directory '$erpnext_dir' found, pulling latest changes..."
     cd $erpnext_dir
@@ -73,7 +73,7 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # Clone the repository into user's home directory
     echo "Cloning the repository..."
-    nadooit_dir=~/nadooit_managmentsystem
+    nadooit_dir=$HOME/nadooit_managmentsystem
     if [ -d "$nadooit_dir" ]; then
         echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
         cd $nadooit_dir
@@ -117,7 +117,7 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         sed -i "s/your_cockroach_db_user/$cockroach_db_user/" .env
         sed -i "s/your_cockroach_db_password/$cockroach_db_password/" .env
         sed -i "s/your_cockroach_db_options/$cockroach_db_options/" .env
-        sed -i "s/your_nadooit_api_key/$nadoecho "Setup completed."
+        sed -i "s/your_nadooit_api_key/$nado" .env
         sed -i "s/your_nadooit_api_key/$nadooit_api_key/" .env
         sed -i "s/your_nadooit_user_code/$nadooit_user_code/" .env
         echo ".env file has been updated with the values you entered."

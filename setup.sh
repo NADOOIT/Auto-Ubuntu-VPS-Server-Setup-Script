@@ -43,9 +43,28 @@ fi
 # Prompt for nadooit_management service installation
 echo "Do you want to install nadooit_management service? (Y/n)"
 read install_nadooit
-
 if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
+
+    # Generate an SSH key pair if it doesn't already exist
+    if [ ! -f "~/.ssh/id_ed25519" ]; then
+        echo "Generating a new SSH key pair..."
+        read -p "Enter your email address: " email_address
+        ssh-keygen -t ed25519 -C "$email_address"
+        echo "SSH key pair generated."
+    else
+        echo "Existing SSH key pair found."
+    fi
+
+    # Display the public key
+    echo "Public key:"
+    cat ~/.ssh/id_ed25519.pub
+    echo "Add this public key to your GitHub account before continuing. Go to your GitHub account settings, click on SSH and GPG keys, and click on the New SSH key button. Paste the copied public key into the Key field, give it a meaningful title, and click on Add SSH key."
+
+    # Prompt user to continue after adding the SSH key
+    read -p "Press enter to continue once you've added the SSH key to your GitHub account."
+
     # Clone the repository
+    echo "Cloning the repository..."
     git clone git@github.com:NADOOITChristophBa/nadooit_managmentsystem.git
     cd nadooit_managmentsystem
     cp .env.example .env
@@ -56,8 +75,8 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     echo "Do you want to update the .env file now? (Y/n)"
     read update_env
 
+    # If user wants to update .env file
     if [[ "$update_env" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
-        # Ask for each of the values needed in the .env file
         echo "Please enter the following values for the .env file:"
         read -p "DJANGO_SECRET_KEY: " django_secret_key
         read -p "DOMAIN (for DJANGO_CSRF_TRUSTED_ORIGINS): " domain
@@ -71,6 +90,8 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         read -p "NADOOIT__API_KEY: " nadooit_api_key
         read -p "NADOOIT__USER_CODE: " nadooit_user_code
         read -p "OPENAI_API_KEY: " openai_api_key
+
+
 
         sed -i "s/your_secret_key/$django_secret_key/" .env
         sed -i "s/your_domain/$domain/" .env

@@ -77,7 +77,7 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # Clone the repository into user's home directory
     echo "Cloning the repository..."
-    nadooit_dir=$HOME/nadooit_managmentsystem
+    nadooit_dir=$USER_HOME/nadooit_managmentsystem
     if [ -d "$nadooit_dir" ]; then
         echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
         cd $nadooit_dir

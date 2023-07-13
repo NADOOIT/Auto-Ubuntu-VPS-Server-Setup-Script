@@ -119,8 +119,8 @@ After preparing your server, you can use the setup script as follows:
    After logging in, clone the repository with the setup script:
 
    ```bash
-   git clone git@github.com:NADOOIT/Auto-Ubuntu-VPS-Server-Setup-Script.git
-   cd Auto-Ubuntu-VPS-Server-Setup-Script
+        git clone https://github.com/NADOOIT/Auto-Ubuntu-VPS-Server-Setup-Script.git
+        cd Auto-Ubuntu-VPS-Server-Setup-Script
    ```
 
 3. **Make the script executable**:

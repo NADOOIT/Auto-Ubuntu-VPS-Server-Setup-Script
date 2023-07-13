@@ -20,11 +20,26 @@ Before you can use the setup script, you need to perform some initial configurat
 
         Replace `your_server_ip` with the IP address of your server. The initial user is usually 'root', but if you are using a GDPR-compliant provider like IONOS, you can find the initial user and password in your VPS overview.
 
+        If you encounter an error message saying `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`, this is due to the SSH client recognizing that the server's fingerprint doesn't match the one it has recorded in the `known_hosts` file. This typically happens when you've reinstalled or reset your server. To resolve this, remove the offending key with this command:
+
+        ```bash
+        ssh-keygen -R "your_server_ip"
+        ```
+
+        After running this command, you should be able to connect to your server again.
+
     - **On macOS and Linux**: Open Terminal and type the following command, then press 'Enter'. Replace `root` with your server's username and `your_server_ip` with the IP address of your server.
 
         ```bash
         ssh root@your_server_ip
         ```
+
+        If you encounter an error similar to `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`, you can use the following command to remove the offending key:
+
+        ```bash
+        ssh-keygen -R "your_server_ip"
+        ```
+
 
 2. **Create a new user account with sudo privileges**:
 

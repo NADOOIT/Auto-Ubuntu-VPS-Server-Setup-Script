@@ -58,6 +58,7 @@ Before you can use the setup script, you need to perform some initial configurat
 
    ```bash
    sudo apt update
+   sudo apt upgrade
    sudo apt install git
    ```
 

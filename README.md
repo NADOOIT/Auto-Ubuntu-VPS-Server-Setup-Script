@@ -8,7 +8,25 @@ This guide aims to assist absolute beginners in using the script.
 
 Before you can use the setup script, you need to perform some initial configurations on your Ubuntu VPS server:
 
-1. **Create a new user account with sudo privileges**:
+1. **Log in to your server using SSH**:
+
+    To connect to your server, you will need a client application that supports the Secure Shell (SSH) protocol. For Windows users, PowerShell provides an easy way to use SSH. For macOS and Linux, the Terminal application has built-in SSH support.
+
+    - **On Windows**: Press the Windows key, type 'PowerShell', and press 'Enter'. This will launch Windows PowerShell. Use the following command to connect to your server:
+
+        ```bash
+        ssh root@your_server_ip
+        ```
+
+        Replace `your_server_ip` with the IP address of your server. The initial user is usually 'root', but if you are using a GDPR-compliant provider like IONOS, you can find the initial user and password in your VPS overview.
+
+    - **On macOS and Linux**: Open Terminal and type the following command, then press 'Enter'. Replace `root` with your server's username and `your_server_ip` with the IP address of your server.
+
+        ```bash
+        ssh root@your_server_ip
+        ```
+
+2. **Create a new user account with sudo privileges**:
 
    On your server, create a new user account and grant it sudo privileges. This will be the user account you'll use to run the script. Here is an example of creating a new user named `your_username` and adding it to the sudo group:
 
@@ -19,7 +37,7 @@ Before you can use the setup script, you need to perform some initial configurat
 
    Make sure to replace `your_username` with the username you want.
 
-2. **Install Git on your server**:
+3. **Install Git on your server**:
 
    The setup script requires Git to clone the necessary repositories. Install Git by running:
 

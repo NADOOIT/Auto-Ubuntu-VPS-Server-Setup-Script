@@ -4,7 +4,33 @@ This script is a tool designed to simplify the process of setting up your Ubuntu
 
 This guide aims to assist absolute beginners in using the script.
 
+## Preparations
+
+Before you can use the setup script, you need to perform some initial configurations on your Ubuntu VPS server:
+
+1. **Create a new user account with sudo privileges**:
+
+   On your server, create a new user account and grant it sudo privileges. This will be the user account you'll use to run the script. Here is an example of creating a new user named `your_username` and adding it to the sudo group:
+
+   ```bash
+   adduser your_username
+   usermod -aG sudo your_username
+   ```
+
+   Make sure to replace `your_username` with the username you want.
+
+2. **Install Git on your server**:
+
+   The setup script requires Git to clone the necessary repositories. Install Git by running:
+
+   ```bash
+   sudo apt update
+   sudo apt install git
+   ```
+
 ## How to use the script
+
+After preparing your server, you can use the setup script as follows:
 
 1. **Log in to your server using SSH**:
 
@@ -49,35 +75,32 @@ This guide aims to assist absolute beginners in using the script.
 
     The rest of the steps remain the same as mentioned in the previous guide.
 
-2. **Create the script file**:
+2. **Clone the repository containing the script**:
 
-    After logging in, you're now at the home directory of your server. Create a new file named `setup.sh` using `nano`, a command-line text editor. If you prefer, you could use other text editors like `vi` or `emacs`.
+   After logging in, clone the repository with the setup script:
 
-    ```bash
-    nano setup.sh
-    ```
+   ```bash
+   git clone git@github.com:NADOOIT/Auto-Ubuntu-VPS-Server-Setup-Script.git
+   cd Auto-Ubuntu-VPS-Server-Setup-Script
+   ```
 
-3. **Copy the script content**:
+3. **Make the script executable**:
 
-    Now, copy the content of the setup script provided. Go back to your terminal window, right-click to paste the script into the `setup.sh` file. Save and close the file by pressing `Ctrl+X`, then `Y`, then `Enter`. If you see any errors at this stage, they might be due to a problem with the script content.
+   The next step is to give the file `setup.sh`, the permission to execute as a program. If you skip this step, the system will refuse to run the script and will give you a 'Permission Denied' error.
 
-4. **Make the script executable**:
+   ```bash
+   chmod +x setup.sh
+   ```
 
-    The next step is to give the file you created, `setup.sh`, the permission to execute as a program. If you skip this step, the system will refuse to run the script and will give you a 'Permission Denied' error.
+4. **Run the setup script**:
 
-    ```bash
-    chmod +x setup.sh
-    ```
+   Now you can run the script. This will install Docker, Docker Compose, and, if you choose, ERPNext.
 
-5. **Run the setup script**:
+   ```bash
+   sudo ./setup.sh
+   ```
 
-    Now you can run the script. This will install the necessary packages, Docker, Docker Compose and, if you choose, ERPNext. 
-
-    ```bash
-    sudo ./setup.sh
-    ```
-
-    The script will ask for a username to create a new user account. You will also be asked if you want to install ERPNext. If you want to install it, type 'yes'; otherwise, type 'no'.
+   You will be asked if you want to install ERPNext. If you want to install it, type 'yes'; otherwise, type 'no'.
 
 ## Accessing Installed Applications
 

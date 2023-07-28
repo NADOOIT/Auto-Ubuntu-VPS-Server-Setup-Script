@@ -75,6 +75,9 @@ After preparing your server, you can use the setup script as follows:
 
         You can generate an SSH key pair directly in PowerShell. Just paste the following command and press 'Enter':
 
+        ⚠️ WARNING: If an SSH key already exists at the default location, DO NOT overwrite it. Doing so could invalidate your key on any systems where it's currently in use and potentially lock you out. So if asked to overwirte the key, type 'n' and press 'Enter'.
+        Just skip to the next step if you already have an SSH key pair.
+
         ```bash
         ssh-keygen
         ```
@@ -102,6 +105,9 @@ After preparing your server, you can use the setup script as follows:
         ```
 
     - **On macOS and Linux**: Open Terminal and type the following command, then press 'Enter'. Replace `your_username` with your server's username and `your_server_ip` with the IP address of your server.
+
+        ⚠️ WARNING: If an SSH key already exists at the default location, DO NOT overwrite it. Doing so could invalidate your key on any systems where it's currently in use and potentially lock you out. So if asked to overwirte the key, type 'n' and press 'Enter'.
+        Just skip to the next step if you already have an SSH key pair.
 
         ```bash
         ssh your_username@your_server_ip

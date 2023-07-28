@@ -3,6 +3,27 @@
 CURRENT_USER=$(logname)
 USER_HOME=$(eval echo ~$CURRENT_USER)
 
+#!/bin/bash
+
+CURRENT_USER=$(logname)
+USER_HOME=$(eval echo ~$CURRENT_USER)
+
+# Early option to disable password authentication
+echo "Do you want to disable password authentication for increased security? (Y/n)"
+read disable_password_auth
+
+if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
+  echo "Disabling password authentication."
+  
+  # Backup sshd_config file before modifying
+  echo "Creating a backup of your sshd_config file..."
+  sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+  echo "Backup created at /etc/ssh/sshd_config.bak."
+  
+  sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+  sudo systemctl restart sshd
+  echo "Password authentication has been disabled."
+fi
 
 # Early option to skip to service installation
 echo "Do you want to skip to service installation? (Y/n)"

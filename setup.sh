@@ -59,7 +59,7 @@ read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup
-  erpnext_dir="$HOME/frappe_docker"
+  erpnext_dir="/home/$SUDO_USER/frappe_docker"
   
   # Ensure directory exists or create it
   if [ ! -d "$erpnext_dir" ]; then

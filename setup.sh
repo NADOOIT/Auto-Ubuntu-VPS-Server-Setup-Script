@@ -59,16 +59,20 @@ read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup
-  erpnext_dir=$HOME/frappe_docker
+  erpnext_dir="$HOME/frappe_docker"
   
-  if [ -d "$erpnext_dir" ]; then
-    echo "Existing directory '$erpnext_dir' found, pulling latest changes..."
+  # Ensure directory exists or create it
+  if [ ! -d "$erpnext_dir" ]; then
+    mkdir -p $erpnext_dir
+  fi
+  
+  # Check if the easy-install.py script is present
+  if [ ! -f "$erpnext_dir/easy-install.py" ]; then
+    wget -O "$erpnext_dir/easy-install.py" https://raw.githubusercontent.com/frappe/bench/develop/easy-install.py
+  else
     cd $erpnext_dir
     git pull
     cd -
-  else
-    mkdir -p $erpnext_dir
-    wget -O $erpnext_dir/easy-install.py https://raw.githubusercontent.com/frappe/bench/develop/easy-install.py
   fi
   
   # Prompt for project name
@@ -85,6 +89,7 @@ if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   cp example.env .env
   echo "ERPNext has been installed."
 fi
+
 
 
 # Prompt for nadooit_management service installation

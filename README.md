@@ -40,7 +40,6 @@ Before you can use the setup script, you need to perform some initial configurat
         ssh-keygen -R "your_server_ip"
         ```
 
-
 2. **Create a new user account with sudo privileges**:
 
    On your server, create a new user account and grant it sudo privileges. This will be the user account you'll use to run the script. Here is an example of creating a new user named `your_username` and adding it to the sudo group:

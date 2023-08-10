@@ -57,21 +57,35 @@ fi
 echo "Do you want to install ERPNext? (Y/n)"
 read install_erpnext
 
-if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
+if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup
-  erpnext_dir=$USER_HOME/frappe_docker
+  erpnext_dir=$HOME/frappe_docker
+  
   if [ -d "$erpnext_dir" ]; then
     echo "Existing directory '$erpnext_dir' found, pulling latest changes..."
     cd $erpnext_dir
     git pull
     cd -
   else
-    git clone https://github.com/frappe/frappe_docker.git $erpnext_dir
+    mkdir -p $erpnext_dir
+    wget -O $erpnext_dir/easy-install.py https://raw.githubusercontent.com/frappe/bench/develop/easy-install.py
   fi
+  
+  # Prompt for project name
+  echo "Please enter your project name:"
+  read project_name
+
+  # Prompt for email
+  echo "Please enter your email:"
+  read email
+
   cd $erpnext_dir
+  python3 easy-install.py --prod --project "$project_name" --email "$email"
+
   cp example.env .env
   echo "ERPNext has been installed."
 fi
+
 
 # Prompt for nadooit_management service installation
 echo "Do you want to install nadooit_management service? (Y/n)"

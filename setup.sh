@@ -3,11 +3,6 @@
 CURRENT_USER=$(logname)
 USER_HOME=$(eval echo ~$CURRENT_USER)
 
-#!/bin/bash
-
-CURRENT_USER=$(logname)
-USER_HOME=$(eval echo ~$CURRENT_USER)
-
 # Early option to disable password authentication
 echo "Do you want to disable password authentication for increased security? (Y/n)"
 read disable_password_auth

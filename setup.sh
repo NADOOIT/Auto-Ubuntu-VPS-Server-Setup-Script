@@ -91,24 +91,40 @@ echo "Do you want to install nadooit_management service? (Y/n)"
 read install_nadooit
 if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
-    # Generate an SSH key pair if it doesn't already exist
-    ssh_key_path="$USER_HOME/.ssh/id_ed25519"
+    # Define the path for the nadooit_management SSH key
+    ssh_key_path="$USER_HOME/.ssh/nadooit_management_ed25519"
+
+    # Check if the SSH key already exists, generate if not
     if [ ! -f "$ssh_key_path" ]; then
-        echo "Generating a new SSH key pair..."
-        read -p "Enter your email address: " email_address
-        ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path"
-        echo "SSH key pair generated."
+        echo "Generating a new SSH key pair for nadooit_management..."
+        read -p "Enter your email address for the SSH key: " email_address
+
+        # Ensure the .ssh directory exists
+        mkdir -p "$USER_HOME/.ssh"
+        chown "$SUDO_USER":"$SUDO_USER" "$USER_HOME/.ssh"
+
+        # Generate the SSH key
+        sudo -u "$SUDO_USER" ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path" -N ""
+
+        echo "SSH key pair for nadooit_management generated."
     else
-        echo "Existing SSH key pair found."
+        echo "Existing SSH key pair for nadooit_management found."
     fi
 
-    # Display the public key
-    echo "Public key:"
-    cat "$ssh_key_path.pub"
-    echo "Add this public key to your GitHub account before continuing. Go to your GitHub account settings, click on SSH and GPG keys, and click on the New SSH key button. Paste the copied public key into the Key field, give it a meaningful title, and click on Add SSH key."
+    # Ensure the user can read the public key and give instructions for GitHub
+    sudo -u "$SUDO_USER" chmod 644 "$ssh_key_path.pub"
+    echo "Public key for nadooit_management:"
+    sudo -u "$SUDO_USER" cat "$ssh_key_path.pub"
+
+    echo "Add this public key as a deploy key to your GitHub repository for nadooit_management."
+    echo "1. Go to your repository's Settings -> Deploy keys."
+    echo "2. Click on 'Add deploy key', paste the public key, and give it a title."
+    echo "3. Ensure 'Allow write access' is checked if write access is required."
+    echo "4. Click 'Add key'."
+    echo "This will allow the nadooit_management service on this server to interact with your repository."
 
     # Prompt user to continue after adding the SSH key
-    read -p "Press enter to continue once you've added the SSH key to your GitHub account."
+    read -p "Press enter to continue once you've added the deploy key to your GitHub repository."
 
     # Clone the repository into the user's home directory
     echo "Cloning the repository..."

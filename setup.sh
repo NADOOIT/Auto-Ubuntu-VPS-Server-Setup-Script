@@ -85,7 +85,6 @@ if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   echo "ERPNext has been installed."
 fi
 
-
 # Prompt for nadooit_management service installation
 echo "Do you want to install nadooit_management service? (Y/n)"
 read install_nadooit
@@ -101,10 +100,10 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
         # Ensure the .ssh directory exists
         mkdir -p "$USER_HOME/.ssh"
-        chown "$SUDO_USER":"$SUDO_USER" "$USER_HOME/.ssh"
+        chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh"
 
         # Generate the SSH key
-        sudo -u "$SUDO_USER" ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path" -N ""
+        sudo -u "$CURRENT_USER" ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path" -N ""
 
         echo "SSH key pair for nadooit_management generated."
     else
@@ -112,9 +111,9 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     fi
 
     # Ensure the user can read the public key and give instructions for GitHub
-    sudo -u "$SUDO_USER" chmod 644 "$ssh_key_path.pub"
+    sudo -u "$CURRENT_USER" chmod 644 "$ssh_key_path.pub"
     echo "Public key for nadooit_management:"
-    sudo -u "$SUDO_USER" cat "$ssh_key_path.pub"
+    sudo -u "$CURRENT_USER" cat "$ssh_key_path.pub"
 
     echo "Add this public key as a deploy key to your GitHub repository for nadooit_management."
     echo "1. Go to your repository's Settings -> Deploy keys."
@@ -132,14 +131,7 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # Ensure correct permissions on the config file
     chmod 600 "$USER_HOME/.ssh/config"
-
-    # Check if $SUDO_USER is set before using it
-    if [ -n "$SUDO_USER" ]; then
-        chown "$SUDO_USER":"$SUDO_USER" "$USER_HOME/.ssh/config"
-    else
-        echo "Error: SUDO_USER is not set. Unable to set ownership of the SSH config file."
-        # Consider handling this error appropriately
-    fi
+    chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh/config"
 
     # Clone the repository into the user's home directory
     echo "Cloning the repository..."

@@ -3,6 +3,10 @@
 CURRENT_USER=$(logname)
 USER_HOME=$(eval echo ~$CURRENT_USER)
 
+# Start the SSH agent and add the SSH key
+eval "$(ssh-agent -s)"
+ssh-add "$USER_HOME/.ssh/nadooit_management_ed25519"
+
 # Early option to disable password authentication
 echo "Do you want to disable password authentication for increased security? (Y/n)"
 read disable_password_auth
@@ -155,4 +159,35 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     echo "nadooit_management service installation process has completed."
 fi
+
+# Prompt for RustDesk Server OSS installation
+echo "Do you want to install RustDesk Server OSS using Docker Compose? (Y/n)"
+read install_rustdesk
+
+if [[ "$install_rustdesk" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+    echo "Installing RustDesk Server OSS using Docker Compose..."
+
+    # Navigate to the directory where the docker-compose file is located
+    cd "$USER_HOME"
+
+    # Check Docker and Docker Compose are installed
+    if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
+        echo "Docker and Docker Compose are required but not found. Please install Docker and Docker Compose first."
+        exit 1
+    fi
+
+    # Assuming the docker-compose file is named docker-compose-rustdesk.yml and located in the same directory as the setup script
+    if [ -f "$USER_HOME/docker-compose-rustdesk.yml" ]; then
+        echo "Starting RustDesk services using Docker Compose..."
+        sudo docker-compose -f docker-compose-rustdesk.yml up -d
+        echo "RustDesk Server OSS has been started."
+    else
+        echo "docker-compose-rustdesk.yml file not found. Please ensure the file is in $USER_HOME."
+        exit 1
+    fi
+else
+    echo "Skipping RustDesk Server OSS installation."
+fi
+
+
 echo "Setup completed."

@@ -154,3 +154,29 @@ After the script is done:
 
 - **Portainer**: You can access Portainer, which allows you to manage Docker containers, at `http://your-server-ip:9000` in a web browser.
 - **ERPNext**: If you chose to install ERPNext, it's available at `http://your-server-ip` once the Docker containers are operational. If you can't access ERPNext, check whether the Docker containers are running properly.
+
+## Installing RustDesk Server OSS with Docker
+
+This script also supports setting up RustDesk Server OSS, a comprehensive remote desktop software, using Docker. Follow these steps to install RustDesk Server on your Ubuntu VPS.
+
+### RustDesk Server OSS Requirements
+
+Ensure Docker is installed on your server. RustDesk Server requires specific ports to be open:
+
+- **TCP Ports**: 21115, 21116, 21117, 21118, 21119
+- **UDP Port**: 21116
+
+These ports facilitate various RustDesk services, including NAT testing, ID registration, heartbeat service, TCP hole punching, connection service, and relay services. Ports 21118 and 21119 are for web client support and can be disabled if not needed.
+
+### Installation Steps
+
+1. **Open Required Ports**:
+
+   Open the required ports in your server's firewall to enable RustDesk functionality and external connectivity.
+
+2. **Deploy RustDesk using Docker Compose**:
+
+   Navigate to the directory containing the `docker-compose-rustdesk.yml` file. Run the Docker Compose file to start RustDesk Server OSS components in detached mode:
+
+   ```bash
+   sudo docker-compose -f docker-compose-rustdesk.yml up -d

@@ -125,6 +125,21 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
     # Prompt user to continue after adding the SSH key
     read -p "Press enter to continue once you've added the deploy key to your GitHub repository."
+    
+    echo "Configuring SSH to use the generated deploy key for GitHub..."
+    # Create or modify the SSH config file to use the specific key for GitHub
+    echo -e "Host github.com\n\tHostName github.com\n\tIdentityFile $ssh_key_path\n\tIdentitiesOnly yes\n" >> "$USER_HOME/.ssh/config"
+
+    # Ensure correct permissions on the config file
+    chmod 600 "$USER_HOME/.ssh/config"
+
+    # Check if $SUDO_USER is set before using it
+    if [ -n "$SUDO_USER" ]; then
+        chown "$SUDO_USER":"$SUDO_USER" "$USER_HOME/.ssh/config"
+    else
+        echo "Error: SUDO_USER is not set. Unable to set ownership of the SSH config file."
+        # Consider handling this error appropriately
+    fi
 
     # Clone the repository into the user's home directory
     echo "Cloning the repository..."

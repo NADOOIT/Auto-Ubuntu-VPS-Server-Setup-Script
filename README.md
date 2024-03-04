@@ -47,6 +47,7 @@ Before you can use the setup script, you need to perform some initial configurat
    ```bash
     adduser your_username
     usermod -aG sudo your_username
+    sudo groupadd docker
     usermod -aG docker your_username
    ```
 

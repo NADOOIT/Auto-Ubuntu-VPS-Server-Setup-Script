@@ -49,17 +49,17 @@ if [[ "$skip_to_service_install" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         sudo docker-compose -f "./docker-compose-portainer.yml" up -d
         echo "Portainer has been started with Docker Compose for easy Docker container management."
     else
-        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the user's home directory."
+        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the current directory."
         exit 1
     fi
 
     # Start NGINX Proxy Manager using Docker Compose
     echo "Starting NGINX Proxy Manager using Docker Compose..."
-    if [ -f ".docker-compose-nginx-proxy-manager.yml" ]; then
+    if [ -f "./docker-compose-nginx-proxy-manager.yml" ]; then
         sudo docker-compose -f "./docker-compose-nginx-proxy-manager.yml" up -d
         echo "NGINX Proxy Manager has been started with Docker Compose for managing web traffic."
     else
-        echo "docker-compose-nginx-proxy-manager.yml file not found. Please ensure the file exists in the user's home directory."
+        echo "docker-compose-nginx-proxy-manager.yml file not found. Please ensure the file exists in the current directory."
         exit 1
     fi
 
@@ -68,9 +68,6 @@ else
     echo "Skipping Docker, Portainer, and NGINX Proxy Manager setup. Moving directly to service installation."
 fi
 
-# Prompt for ERPNext installation
-echo "Do you want to install ERPNext? (Y/n)"
-read install_erpnext
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup

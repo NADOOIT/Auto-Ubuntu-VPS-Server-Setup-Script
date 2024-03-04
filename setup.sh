@@ -24,12 +24,12 @@ if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
   echo "Password authentication has been disabled."
 fi
 
-# Early option to skip to service installation
-echo "This script will install Docker, Docker Compose, and set up Portainer and NGINX Proxy Manager for managing Docker containers and web traffic. Do you want to proceed with these installations? (Y/n)"
-read skip_to_service_install
+# Prompt to proceed with Docker, Docker Compose, and Portainer installation
+echo "This script will install Docker, Docker Compose, and set up Portainer for managing Docker containers. Do you want to proceed with this setup? (Y/n)"
+read proceed_with_initial_setup
 
-if [[ "$skip_to_service_install" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
-    echo "Continuing with Docker, Portainer, and NGINX Proxy Manager setup."
+if [[ "$proceed_with_initial_setup" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
+    echo "Continuing with Docker and Portainer setup."
 
     # Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -53,21 +53,28 @@ if [[ "$skip_to_service_install" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         exit 1
     fi
 
-    # Start NGINX Proxy Manager using Docker Compose
-    echo "Starting NGINX Proxy Manager using Docker Compose..."
+    echo "Finished setting up Docker and Portainer."
+else
+    echo "Setup of Docker and Portainer has been skipped."
+fi
+
+# Prompt for NGINX Proxy Manager installation
+echo "Do you want to install NGINX Proxy Manager? This will be skipped by default. (y/N)"
+read install_nginx_proxy_manager
+
+if [[ "$install_nginx_proxy_manager" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+    echo "Starting NGINX Proxy Manager setup..."
+    # Assuming the docker-compose file for NGINX Proxy Manager is named docker-compose-nginx-proxy-manager.yml
     if [ -f "./docker-compose-nginx-proxy-manager.yml" ]; then
         sudo docker-compose -f "./docker-compose-nginx-proxy-manager.yml" up -d
-        echo "NGINX Proxy Manager has been started with Docker Compose for managing web traffic."
+        echo "NGINX Proxy Manager has been started with Docker Compose."
     else
         echo "docker-compose-nginx-proxy-manager.yml file not found. Please ensure the file exists in the current directory."
         exit 1
     fi
-
-    echo "Finished setting up Docker, Portainer, and NGINX Proxy Manager. Moving to service installation."
 else
-    echo "Skipping Docker, Portainer, and NGINX Proxy Manager setup. Moving directly to service installation."
+    echo "NGINX Proxy Manager installation has been skipped."
 fi
-
 
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup

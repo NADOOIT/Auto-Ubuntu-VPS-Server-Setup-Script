@@ -102,12 +102,15 @@ if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   echo "ERPNext has been installed."
 fi
 
+
 # Prompt for nadooit_management service installation
 echo "Do you want to install nadooit_management service? (Y/n)"
 read install_nadooit
 if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
-    # Define the path for the nadooit_management SSH key
+    # Define variables for user and SSH key path
+    CURRENT_USER=$(whoami)
+    USER_HOME=$(eval echo ~$CURRENT_USER)
     ssh_key_path="$USER_HOME/.ssh/nadooit_management_ed25519"
 
     # Check if the SSH key already exists, generate if not
@@ -150,27 +153,28 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     chmod 600 "$USER_HOME/.ssh/config"
     chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh/config"
 
-    # Clone the repository into the user's home directory
-    echo "Cloning the repository..."
+    # Adding GitHub's SSH host key to known_hosts to avoid manual intervention
+    echo "Adding GitHub's SSH host key to known_hosts..."
+    ssh-keyscan github.com >> "$USER_HOME/.ssh/known_hosts"
+    chmod 600 "$USER_HOME/.ssh/known_hosts"
+    chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh/known_hosts"
+
+    # Add a delay to ensure changes have propagated
+    echo "Waiting for changes to propagate..."
+    sleep 10  # This will pause the script for 10 seconds
+
+    # Proceed with cloning the repository
     nadooit_dir="$USER_HOME/NADOO-IT"
     if [ -d "$nadooit_dir" ]; then
         echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
         cd "$nadooit_dir"
         git pull
     else
-        git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir"
-        cd "$nadooit_dir"
-    fi
-    # Clone the repository into the user's home directory
-    echo "Cloning the repository..."
-    nadooit_dir="$USER_HOME/NADOO-IT"
-    if [ -d "$nadooit_dir" ]; then
-        echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
-        cd "$nadooit_dir"
-        git pull
-    else
-        git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir"
-        cd "$nadooit_dir"
+        echo "Attempting to clone the nadooit_management repository..."
+        git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir" && cd "$nadooit_dir" || {
+            echo "Failed to clone the repository. Please check your SSH key configuration and try again."
+            exit 1
+        }
     fi
     
     # Run setup.sh script from NADOO-IT
@@ -182,7 +186,10 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     fi
 
     echo "nadooit_management service installation process has completed."
+else
+    echo "nadooit_management service installation skipped."
 fi
+
 
 # Prompt for RustDesk Server OSS installation
 echo "Do you want to install RustDesk Server OSS using Docker Compose? (Y/n)"

@@ -161,6 +161,17 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
         git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir"
         cd "$nadooit_dir"
     fi
+    # Clone the repository into the user's home directory
+    echo "Cloning the repository..."
+    nadooit_dir="$USER_HOME/NADOO-IT"
+    if [ -d "$nadooit_dir" ]; then
+        echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
+        cd "$nadooit_dir"
+        git pull
+    else
+        git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir"
+        cd "$nadooit_dir"
+    fi
     
     # Run setup.sh script from NADOO-IT
     if [ -f "./setup.sh" ]; then

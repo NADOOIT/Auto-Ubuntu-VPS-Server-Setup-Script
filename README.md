@@ -45,8 +45,9 @@ Before you can use the setup script, you need to perform some initial configurat
    On your server, create a new user account and grant it sudo privileges. This will be the user account you'll use to run the script. Here is an example of creating a new user named `your_username` and adding it to the sudo group:
 
    ```bash
-   adduser your_username
-   usermod -aG sudo your_username
+    adduser your_username
+    usermod -aG sudo your_username
+    usermod -aG docker your_username
    ```
 
    Make sure to replace `your_username` with the username you want.

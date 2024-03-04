@@ -25,31 +25,39 @@ if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 fi
 
 # Early option to skip to service installation
-echo "Do you want to skip to service installation? (Y/n)"
+echo "This script will install Docker, Docker Compose, and set up Portainer for managing Docker containers. Do you want to proceed with this installation? (Y/n)"
 read skip_to_service_install
 
 if [[ "$skip_to_service_install" =~ ^([nN][oO]|[nN])$ ]]
 then
-    echo "Continuing with full setup script."
+    echo "Continuing with Docker and Portainer setup."
 
     # Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-    echo "Docker has been installed."
+    echo "Docker has been successfully installed."
 
     # Install Docker Compose
     sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
-    echo "Docker Compose has been installed."
+    echo "Docker Compose has been successfully installed."
 
-    # Pull and Run Portainer
-    docker volume create portainer_data
-    docker run -d -p 8001:8000 -p 9001:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
-    echo "Portainer has been pulled and run."
+    # Start Portainer using Docker Compose
+    echo "Starting Portainer using Docker Compose..."
+    cd "$USER_HOME"
+    if [ -f "docker-compose-portainer.yml" ]; then
+        sudo docker-compose -f docker-compose-portainer.yml up -d
+        echo "Portainer has been started with Docker Compose for easy Docker container management."
+    else
+        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the current directory."
+        exit 1
+    fi
 
-    echo "Finished system setup, moving to service installation."
+    echo "Finished setting up Docker and Portainer. Moving to service installation."
+else
+    echo "Skipping Docker and Portainer setup. Moving directly to service installation."
 fi
 
 # Prompt for ERPNext installation

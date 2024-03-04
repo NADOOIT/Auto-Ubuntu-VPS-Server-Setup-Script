@@ -29,7 +29,6 @@ echo "This script will install Docker, Docker Compose, and set up Portainer and 
 read skip_to_service_install
 
 if [[ "$skip_to_service_install" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
-then
     echo "Continuing with Docker, Portainer, and NGINX Proxy Manager setup."
 
     # Install Docker

@@ -25,12 +25,12 @@ if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 fi
 
 # Early option to skip to service installation
-echo "This script will install Docker, Docker Compose, and set up Portainer for managing Docker containers. Do you want to proceed with this installation? (Y/n)"
+echo "This script will install Docker, Docker Compose, and set up Portainer and NGINX Proxy Manager for managing Docker containers and web traffic. Do you want to proceed with these installations? (Y/n)"
 read skip_to_service_install
 
 if [[ "$skip_to_service_install" =~ ^([nN][oO]|[nN])$ ]]
 then
-    echo "Continuing with Docker and Portainer setup."
+    echo "Continuing with Docker, Portainer, and NGINX Proxy Manager setup."
 
     # Install Docker
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -46,18 +46,27 @@ then
 
     # Start Portainer using Docker Compose
     echo "Starting Portainer using Docker Compose..."
-    cd "$USER_HOME"
-    if [ -f "docker-compose-portainer.yml" ]; then
-        sudo docker-compose -f docker-compose-portainer.yml up -d
+    if [ -f "$USER_HOME/docker-compose-portainer.yml" ]; then
+        sudo docker-compose -f "$USER_HOME/docker-compose-portainer.yml" up -d
         echo "Portainer has been started with Docker Compose for easy Docker container management."
     else
-        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the current directory."
+        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the user's home directory."
         exit 1
     fi
 
-    echo "Finished setting up Docker and Portainer. Moving to service installation."
+    # Start NGINX Proxy Manager using Docker Compose
+    echo "Starting NGINX Proxy Manager using Docker Compose..."
+    if [ -f "$USER_HOME/docker-compose-nginx-proxy-manager.yml" ]; then
+        sudo docker-compose -f "$USER_HOME/docker-compose-nginx-proxy-manager.yml" up -d
+        echo "NGINX Proxy Manager has been started with Docker Compose for managing web traffic."
+    else
+        echo "docker-compose-nginx-proxy-manager.yml file not found. Please ensure the file exists in the user's home directory."
+        exit 1
+    fi
+
+    echo "Finished setting up Docker, Portainer, and NGINX Proxy Manager. Moving to service installation."
 else
-    echo "Skipping Docker and Portainer setup. Moving directly to service installation."
+    echo "Skipping Docker, Portainer, and NGINX Proxy Manager setup. Moving directly to service installation."
 fi
 
 # Prompt for ERPNext installation

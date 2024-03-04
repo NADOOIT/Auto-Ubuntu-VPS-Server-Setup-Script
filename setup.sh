@@ -196,9 +196,6 @@ read install_rustdesk
 if [[ "$install_rustdesk" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     echo "Installing RustDesk Server OSS using Docker Compose..."
 
-    # Navigate to the directory where the docker-compose file is located
-    cd "$USER_HOME"
-
     # Check Docker and Docker Compose are installed
     if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
         echo "Docker and Docker Compose are required but not found. Please install Docker and Docker Compose first."
@@ -206,12 +203,12 @@ if [[ "$install_rustdesk" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     fi
 
     # Assuming the docker-compose file is named docker-compose-rustdesk.yml and located in the same directory as the setup script
-    if [ -f "$USER_HOME/docker-compose-rustdesk.yml" ]; then
+    if [ -f "./docker-compose-rustdesk.yml" ]; then
         echo "Starting RustDesk services using Docker Compose..."
         sudo docker-compose -f docker-compose-rustdesk.yml up -d
         echo "RustDesk Server OSS has been started."
     else
-        echo "docker-compose-rustdesk.yml file not found. Please ensure the file is in $USER_HOME."
+        echo "docker-compose-rustdesk.yml file not found."
         exit 1
     fi
 else

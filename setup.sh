@@ -1,153 +1,150 @@
 #!/bin/bash
 
-CURRENT_USER=$(logname)
-USER_HOME=$(eval echo ~$CURRENT_USER)
+# Ensure the script is run with sufficient privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
+# Capture the username of the user who initiated the sudo command
+REAL_USER=$(logname)
+USER_HOME=$(eval echo ~$REAL_USER)
+
+# Start the SSH agent for the real user and add the specific SSH key
+sudo -H -u $REAL_USER bash -c 'eval "$(ssh-agent -s)" && ssh-add "$HOME/.ssh/nadooit_management_ed25519"'
+
 
 # Start the SSH agent and add the SSH key
 eval "$(ssh-agent -s)"
 ssh-add "$USER_HOME/.ssh/nadooit_management_ed25519"
 
-# Early option to disable password authentication
+# Disabling password authentication
 echo "Do you want to disable password authentication for increased security? (Y/n)"
-read disable_password_auth
+read -r disable_password_auth
 
 if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
-  echo "Disabling password authentication."
-  
-  # Backup sshd_config file before modifying
-  echo "Creating a backup of your sshd_config file..."
-  sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-  echo "Backup created at /etc/ssh/sshd_config.bak."
-  
-  sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
-  sudo systemctl restart sshd
-  echo "Password authentication has been disabled."
+    echo "Disabling password authentication."
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+    systemctl restart sshd
+    echo "Password authentication has been disabled."
 fi
 
-# Prompt to proceed with Docker, Docker Compose, and Portainer installation
+# Docker, Docker Compose, and Portainer installation
 echo "This script will install Docker, Docker Compose, and set up Portainer for managing Docker containers. Do you want to proceed with this setup? (Y/n)"
-read proceed_with_initial_setup
+read -r proceed_with_initial_setup
 
 if [[ "$proceed_with_initial_setup" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     echo "Continuing with Docker and Portainer setup."
-
     # Install Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-    echo "Docker has been successfully installed."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    rm get-docker.sh
 
     # Install Docker Compose
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    sudo curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
-    echo "Docker Compose has been successfully installed."
 
-    # Start Portainer using Docker Compose
-    echo "Starting Portainer using Docker Compose..."
-    if [ -f "./docker-compose-portainer.yml" ]; then
-        sudo docker-compose -f "./docker-compose-portainer.yml" up -d
-        echo "Portainer has been started with Docker Compose for easy Docker container management."
+    # Setting up Portainer
+    if [ ! -f "$USER_HOME/docker-compose-portainer.yml" ]; then
+        echo "docker-compose-portainer.yml file not found in $USER_HOME. Skipping Portainer setup."
     else
-        echo "docker-compose-portainer.yml file not found. Please ensure the file exists in the current directory."
-        exit 1
+        sudo -H -u $REAL_USER bash -c 'docker-compose -f "$HOME/docker-compose-portainer.yml" up -d'
+        echo "Portainer has been started with Docker Compose for easy Docker container management."
     fi
-
     echo "Finished setting up Docker and Portainer."
 else
     echo "Setup of Docker and Portainer has been skipped."
 fi
 
-# Prompt for NGINX Proxy Manager installation
+# NGINX Proxy Manager installation
 echo "Do you want to install NGINX Proxy Manager? This will be skipped by default. (y/N)"
-read install_nginx_proxy_manager
+read -r install_nginx_proxy_manager
 
 if [[ "$install_nginx_proxy_manager" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
-    echo "Starting NGINX Proxy Manager setup..."
-    # Assuming the docker-compose file for NGINX Proxy Manager is named docker-compose-nginx-proxy-manager.yml
-    if [ -f "./docker-compose-nginx-proxy-manager.yml" ]; then
-        sudo docker-compose -f "./docker-compose-nginx-proxy-manager.yml" up -d
-        echo "NGINX Proxy Manager has been started with Docker Compose."
+    if [ ! -f "$USER_HOME/docker-compose-nginx-proxy-manager.yml" ]; then
+        echo "docker-compose-nginx-proxy-manager.yml file not found in $USER_HOME. Skipping NGINX Proxy Manager setup."
     else
-        echo "docker-compose-nginx-proxy-manager.yml file not found. Please ensure the file exists in the current directory."
-        exit 1
+        sudo -H -u $REAL_USER bash -c 'docker-compose -f "$HOME/docker-compose-nginx-proxy-manager.yml" up -d'
+        echo "NGINX Proxy Manager has been started with Docker Compose."
     fi
 else
     echo "NGINX Proxy Manager installation has been skipped."
 fi
 
+# Ask if the user wants to proceed with ERPNext installation
+echo "Do you want to proceed with ERPNext installation? (Y/n)"
+read install_erpnext
+
 if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   # ERPNext Setup
-  erpnext_dir="/home/$SUDO_USER/frappe_docker"
+  REAL_USER=$(logname)
+  USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6) # More reliable method to get the home directory
+  erpnext_dir="$USER_HOME/frappe_docker"
   
   # Ensure directory exists or create it
-  if [ ! -d "$erpnext_dir" ]; then
-    mkdir -p $erpnext_dir
-  fi
+  sudo -u "$REAL_USER" mkdir -p "$erpnext_dir"
   
   # Check if the easy-install.py script is present
   if [ ! -f "$erpnext_dir/easy-install.py" ]; then
-    wget -O "$erpnext_dir/easy-install.py" https://raw.githubusercontent.com/frappe/bench/develop/easy-install.py
+    sudo -u "$REAL_USER" wget -O "$erpnext_dir/easy-install.py" https://raw.githubusercontent.com/frappe/bench/develop/easy-install.py
   else
-    cd $erpnext_dir
-    git pull
-    cd -
+    sudo -u "$REAL_USER" bash -c "cd $erpnext_dir && git pull"
   fi
   
-  # Prompt for project name
+  # Prompt for project name and email
   echo "Please enter your project name:"
   read project_name
-
-  # Prompt for email
   echo "Please enter your email:"
   read email
 
-  cd $erpnext_dir
-  python3 easy-install.py --prod --project "$project_name" --email "$email"
-
-  cp example.env .env
+  # Running the installation as the real user
+  sudo -u "$REAL_USER" bash -c "cd $erpnext_dir && python3 easy-install.py --prod --project \"$project_name\" --email \"$email\""
+  
   echo "ERPNext has been installed."
+else
+  echo "ERPNext installation skipped."
 fi
 
 
-# Prompt for nadooit_management service installation
-echo "Do you want to install nadooit_management service? (Y/n)"
-read install_nadooit
-if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
 
-    # Define variables for user and SSH key path
-    CURRENT_USER=$(whoami)
-    USER_HOME=$(eval echo ~$CURRENT_USER)
-    ssh_key_path="$USER_HOME/.ssh/nadooit_management_ed25519"
+
+# Prompt for NADOO-IT service installation
+echo "Do you want to install the NADOO-IT service? (Y/n)"
+read install_nadoo_it
+if [[ "$install_nadoo_it" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
+
+    REAL_USER=$(logname)
+    USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+    ssh_key_path="$USER_HOME/.ssh/nadoo_it_ed25519"
 
     # Check if the SSH key already exists, generate if not
     if [ ! -f "$ssh_key_path" ]; then
-        echo "Generating a new SSH key pair for nadooit_management..."
+        echo "Generating a new SSH key pair for NADOO-IT..."
         read -p "Enter your email address for the SSH key: " email_address
 
         # Ensure the .ssh directory exists
-        mkdir -p "$USER_HOME/.ssh"
-        chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh"
+        sudo -u "$REAL_USER" mkdir -p "$USER_HOME/.ssh"
 
         # Generate the SSH key
-        sudo -u "$CURRENT_USER" ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path" -N ""
+        sudo -u "$REAL_USER" ssh-keygen -t ed25519 -C "$email_address" -f "$ssh_key_path" -N ""
 
-        echo "SSH key pair for nadooit_management generated."
+        echo "SSH key pair for NADOO-IT generated."
     else
-        echo "Existing SSH key pair for nadooit_management found."
+        echo "Existing SSH key pair for NADOO-IT found."
     fi
 
     # Ensure the user can read the public key and give instructions for GitHub
-    sudo -u "$CURRENT_USER" chmod 644 "$ssh_key_path.pub"
-    echo "Public key for nadooit_management:"
-    sudo -u "$CURRENT_USER" cat "$ssh_key_path.pub"
+    echo "Public key for NADOO-IT:"
+    cat "$ssh_key_path.pub"
 
-    echo "Add this public key as a deploy key to your GitHub repository for nadooit_management."
+    echo "Add this public key as a deploy key to your GitHub repository for NADOO-IT."
     echo "1. Go to your repository's Settings -> Deploy keys."
     echo "2. Click on 'Add deploy key', paste the public key, and give it a title."
     echo "3. Ensure 'Allow write access' is checked if write access is required."
     echo "4. Click 'Add key'."
-    echo "This will allow the nadooit_management service on this server to interact with your repository."
+    echo "This will allow the NADOO-IT service on this server to interact with your repository."
 
     # Prompt user to continue after adding the SSH key
     read -p "Press enter to continue once you've added the deploy key to your GitHub repository."
@@ -156,46 +153,40 @@ if [[ "$install_nadooit" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     # Create or modify the SSH config file to use the specific key for GitHub
     echo -e "Host github.com\n\tHostName github.com\n\tIdentityFile $ssh_key_path\n\tIdentitiesOnly yes\n" >> "$USER_HOME/.ssh/config"
 
-    # Ensure correct permissions on the config file
-    chmod 600 "$USER_HOME/.ssh/config"
-    chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh/config"
-
     # Adding GitHub's SSH host key to known_hosts to avoid manual intervention
-    echo "Adding GitHub's SSH host key to known_hosts..."
     ssh-keyscan github.com >> "$USER_HOME/.ssh/known_hosts"
-    chmod 600 "$USER_HOME/.ssh/known_hosts"
-    chown "$CURRENT_USER":"$CURRENT_USER" "$USER_HOME/.ssh/known_hosts"
 
     # Add a delay to ensure changes have propagated
     echo "Waiting for changes to propagate..."
     sleep 10  # This will pause the script for 10 seconds
 
     # Proceed with cloning the repository
-    nadooit_dir="$USER_HOME/NADOO-IT"
-    if [ -d "$nadooit_dir" ]; then
-        echo "Existing directory '$nadooit_dir' found, pulling latest changes..."
-        cd "$nadooit_dir"
+    nadoo_it_dir="$USER_HOME/NADOO-IT"
+    if [ -d "$nadoo_it_dir" ]; then
+        echo "Existing directory '$nadoo_it_dir' found, pulling latest changes..."
+        cd "$nadoo_it_dir"
         git pull
     else
-        echo "Attempting to clone the nadooit_management repository..."
-        git clone git@github.com:NADOOIT/NADOO-IT.git "$nadooit_dir" && cd "$nadooit_dir" || {
+        echo "Attempting to clone the NADOO-IT repository..."
+        sudo -u "$REAL_USER" git clone git@github.com:NADOOIT/NADOO-IT.git "$nadoo_it_dir" && cd "$nadoo_it_dir" || {
             echo "Failed to clone the repository. Please check your SSH key configuration and try again."
             exit 1
         }
     fi
     
     # Run setup.sh script from NADOO-IT
-    if [ -f "./setup.sh" ]; then
+    if [ -f "$nadoo_it_dir/setup.sh" ]; then
         echo "Running setup.sh script from NADOO-IT..."
-        bash ./setup.sh
+        sudo -u "$REAL_USER" bash "$nadoo_it_dir/setup.sh"
     else
         echo "setup.sh script not found in the NADOO-IT directory."
     fi
 
-    echo "nadooit_management service installation process has completed."
+    echo "NADOO-IT service installation process has completed."
 else
-    echo "nadooit_management service installation skipped."
+    echo "NADOO-IT service installation skipped."
 fi
+
 
 
 # Prompt for RustDesk Server OSS installation

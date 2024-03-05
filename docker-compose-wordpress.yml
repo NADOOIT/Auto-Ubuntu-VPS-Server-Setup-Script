@@ -7,23 +7,23 @@ services:
     ports:
       - "${WORDPRESS_PORT}:80"
     environment:
-      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_HOST: db
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
       WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
       WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
     volumes:
-      - ./wb:/var/www/html
-      - wordpress:/var/www/html
+      - wordpress_data:/var/www/html
+
   db:
     image: mysql:5.7
-    volumes:
-      - ./db_data:/var/lib/mysql
-      - db:/var/lib/mysql
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -31,11 +31,11 @@ services:
     ports:
       - "${PHPMYADMIN_PORT}:80"
     environment:
-      PMA_HOST: ${WORDPRESS_DB_HOST}
+      PMA_HOST: db
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     depends_on:
       - db
-      
+
 volumes:
-  wordpress:
-  db:
+  wordpress_data:
+  db_data:

@@ -96,6 +96,18 @@ if [[ "$install_wordpress" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     echo "Please enter the MySQL root password:"
     read mysql_root_password
 
+    # Additional MySQL environment variables
+    echo "Please enter the MySQL user (default 'wordpressuser'):"
+    read mysql_user
+    mysql_user=${mysql_user:-wordpressuser}
+
+    echo "Please enter the MySQL password:"
+    read mysql_password
+
+    echo "Please enter the MySQL database (default 'wordpressdb'):"
+    read mysql_database
+    mysql_database=${mysql_database:-wordpressdb}
+
     echo "Please enter the port for WordPress (default '8000'):"
     read wordpress_port
     wordpress_port=${wordpress_port:-8000}
@@ -112,6 +124,9 @@ WORDPRESS_DB_USER=$wordpress_db_user
 WORDPRESS_DB_PASSWORD=$wordpress_db_password
 WORDPRESS_DB_NAME=$wordpress_db_name
 MYSQL_ROOT_PASSWORD=$mysql_root_password
+MYSQL_USER=$mysql_user
+MYSQL_PASSWORD=$mysql_password
+MYSQL_DATABASE=$mysql_database
 WORDPRESS_PORT=$wordpress_port
 PHPMYADMIN_PORT=$phpmyadmin_port
 EOF
@@ -130,6 +145,7 @@ EOF
 else
     echo "Skipping WordPress installation."
 fi
+
 
 
 # Ask if the user wants to proceed with ERPNext installation

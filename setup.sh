@@ -73,6 +73,26 @@ else
     echo "NGINX Proxy Manager installation has been skipped."
 fi
 
+# Prompt for WordPress installation using Docker Compose
+echo "Do you want to install WordPress using Docker Compose? (Y/n)"
+read install_wordpress
+
+if [[ "$install_wordpress" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+    echo "Installing WordPress using Docker Compose..."
+
+    # Check if the Docker Compose file for WordPress exists
+    if [ -f "./docker-compose-wordpress.yml" ]; then
+        echo "Starting WordPress services using Docker Compose..."
+        sudo docker-compose -f docker-compose-wordpress.yml up -d
+        echo "WordPress has been started."
+    else
+        echo "docker-compose-wordpress.yml file not found."
+        exit 1
+    fi
+else
+    echo "Skipping WordPress installation."
+fi
+
 # Ask if the user wants to proceed with ERPNext installation
 echo "Do you want to proceed with ERPNext installation? (Y/n)"
 read install_erpnext

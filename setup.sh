@@ -73,14 +73,52 @@ else
     echo "NGINX Proxy Manager installation has been skipped."
 fi
 
-# Prompt for WordPress installation using Docker Compose
-echo "Do you want to install WordPress using Docker Compose? (Y/n)"
+echo "Do you want to install WordPress using Docker Compose? (y/N)"
 read install_wordpress
 
 if [[ "$install_wordpress" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
-    echo "Installing WordPress using Docker Compose..."
+    echo "Preparing to install WordPress..."
+    
+    # Prompt for environment variable values
+    echo "Please enter the WordPress database host (default 'db'):"
+    read wordpress_db_host
+    wordpress_db_host=${wordpress_db_host:-db}
 
-    # Check if the Docker Compose file for WordPress exists
+    echo "Please enter the WordPress database username:"
+    read wordpress_db_user
+
+    echo "Please enter the WordPress database password:"
+    read wordpress_db_password
+
+    echo "Please enter the WordPress database name:"
+    read wordpress_db_name
+
+    echo "Please enter the MySQL root password:"
+    read mysql_root_password
+
+    echo "Please enter the port for WordPress (default '8000'):"
+    read wordpress_port
+    wordpress_port=${wordpress_port:-8000}
+
+    echo "Please enter the port for phpMyAdmin (default '8080'):"
+    read phpmyadmin_port
+    phpmyadmin_port=${phpmyadmin_port:-8080}
+
+    # Create .env file with input values
+    echo "Creating .env file..."
+    cat << EOF > .env
+WORDPRESS_DB_HOST=$wordpress_db_host
+WORDPRESS_DB_USER=$wordpress_db_user
+WORDPRESS_DB_PASSWORD=$wordpress_db_password
+WORDPRESS_DB_NAME=$wordpress_db_name
+MYSQL_ROOT_PASSWORD=$mysql_root_password
+WORDPRESS_PORT=$wordpress_port
+PHPMYADMIN_PORT=$phpmyadmin_port
+EOF
+
+    echo ".env file created successfully."
+
+    # The rest of your script follows
     if [ -f "./docker-compose-wordpress.yml" ]; then
         echo "Starting WordPress services using Docker Compose..."
         sudo docker-compose -f docker-compose-wordpress.yml up -d
@@ -92,6 +130,7 @@ if [[ "$install_wordpress" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
 else
     echo "Skipping WordPress installation."
 fi
+
 
 # Ask if the user wants to proceed with ERPNext installation
 echo "Do you want to proceed with ERPNext installation? (Y/n)"

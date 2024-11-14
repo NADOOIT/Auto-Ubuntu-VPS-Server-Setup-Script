@@ -172,13 +172,45 @@ These ports facilitate various RustDesk services, including NAT testing, ID regi
 
 ### Installation Steps
 
-1. **Open Required Ports**:
+1. **Open Required Ports**: Open the required ports in your server's firewall to enable RustDesk functionality and external connectivity. Use the following commands:
 
-   Open the required ports in your server's firewall to enable RustDesk functionality and external connectivity.
+   ```bash
+   sudo ufw allow 21115/tcp
+   sudo ufw allow 21116/tcp
+   sudo ufw allow 21116/udp
+   sudo ufw allow 21117/tcp
+   sudo ufw allow 21118/tcp
+   sudo ufw allow 21119/tcp
+   sudo ufw reload
+   ```
 
-2. **Deploy RustDesk using Docker Compose**:
+   Note: If you're not using UFW (Uncomplicated Firewall), adjust these commands according to your firewall configuration.
 
-   Navigate to the directory containing the `docker-compose-rustdesk.yml` file. Run the Docker Compose file to start RustDesk Server OSS components in detached mode:
+2. **Deploy RustDesk using Docker Compose**: Navigate to the directory containing the `docker-compose-rustdesk.yml` file. Run the Docker Compose file to start RustDesk Server OSS components in detached mode:
 
    ```bash
    sudo docker-compose -f docker-compose-rustdesk.yml up -d
+   ```
+
+3. **Retrieve the Server Key**: After starting the RustDesk services, you need to retrieve the server key. This key is essential for configuring RustDesk clients to connect to your server. To get the key, check the logs of the `hbbs` container:
+
+   ```bash
+   docker logs hbbs
+   ```
+
+   Look for a line that starts with "Key:". It should look something like this:
+
+   ```
+   Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
+   ```
+
+   Replace 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=' with the actual key you see in the logs. This key needs to be added to the RustDesk client settings along with your server's address.
+
+4. **Configure RustDesk Clients**: On each RustDesk client that you want to connect to this server:
+   - Open RustDesk settings
+   - Go to the "Network" tab
+   - Set the "ID Server" to your server's address (e.g., rust.nadooit.de)
+   - Set the "Key" field to the key you retrieved from the server logs
+   - Click "Apply" to save the settings
+
+By following these steps, you should have a functioning RustDesk Server OSS installation, with the necessary ports open and the correct key configuration for client connections.

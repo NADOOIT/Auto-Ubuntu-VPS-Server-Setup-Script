@@ -43,6 +43,7 @@ setup_windows_hello() {
     
     # Configure PAM for Windows Hello
     echo -e "\n⚙️ Configuring PAM for Windows Hello..."
+    # shellcheck disable=SC2029
     ssh "$admin_user@$server_ip" "sudo bash -c 'echo \"auth sufficient pam_webauthn.so\" >> /etc/pam.d/common-auth'"
     
     echo -e "\n${GREEN}✅ Windows Hello setup complete${NC}"
@@ -73,7 +74,8 @@ setup_passkeys() {
     
     # Configure PAM
     echo -e "\n⚙️ Configuring PAM for Passkeys..."
-    ssh "$admin_user@$server_ip" "sudo bash -c 'echo \"auth sufficient pam_webauthn.so credential_source=file:///home/$admin_user/.config/webauthn/credentials.json\" >> /etc/pam.d/common-auth'"
+    # shellcheck disable=SC2029
+    ssh "$admin_user@$server_ip" "sudo bash -c 'echo \"auth sufficient pam_webauthn.so credential_source=file:///home/\$admin_user/.config/webauthn/credentials.json\" >> /etc/pam.d/common-auth'"
     
     echo -e "\n${GREEN}✅ Passkey setup complete${NC}"
 }
@@ -92,7 +94,7 @@ manage_auth_methods() {
         echo -e "4) 📱 Setup Passkeys"
         echo -e "5) ⬅️  Back to Main Menu"
         
-        read -p "Choose an option (1-5): " auth_choice
+        read -r -p "Choose an option (1-5): " auth_choice
         
         case "$auth_choice" in
             1)

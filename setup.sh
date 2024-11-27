@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Set noninteractive frontend to avoid prompts
+export DEBIAN_FRONTEND=noninteractive
+
+# Enable error handling
+set -e
+trap 'echo "Error on line $LINENO. Exit code: $?"' ERR
+
 # Ensure the script is run with sufficient privileges
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
@@ -10,9 +17,19 @@ fi
 REAL_USER=$(logname)
 USER_HOME=$(eval echo ~$REAL_USER)
 
+# Function to handle timeouts
+wait_for_command() {
+    local timeout=$1
+    local command=$2
+    local message=$3
+    
+    echo "$message"
+    timeout $timeout bash -c "$command"
+    return $?
+}
+
 # Start the SSH agent for the real user and add the specific SSH key
 sudo -H -u $REAL_USER bash -c 'eval "$(ssh-agent -s)" && ssh-add "$HOME/.ssh/nadooit_management_ed25519"'
-
 
 # Start the SSH agent and add the SSH key
 eval "$(ssh-agent -s)"
@@ -25,7 +42,7 @@ read -r disable_password_auth
 if [[ "$disable_password_auth" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     echo "Disabling password authentication."
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+    sed -i 's/#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
     systemctl restart sshd
     echo "Password authentication has been disabled."
 fi
@@ -36,21 +53,42 @@ read -r proceed_with_initial_setup
 
 if [[ "$proceed_with_initial_setup" =~ ^([yY][eE][sS]|[yY])*$ ]]; then
     echo "Continuing with Docker and Portainer setup."
-    # Install Docker
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
+    
+    # Install Docker with timeout and retry mechanism
+    for i in {1..3}; do
+        if wait_for_command 300 "curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh" "Installing Docker (attempt $i)"; then
+            break
+        fi
+        if [ $i -eq 3 ]; then
+            echo "Failed to install Docker after 3 attempts"
+            exit 1
+        fi
+        sleep 10
+    done
+    rm -f get-docker.sh
 
-    # Install Docker Compose
+    # Install Docker Compose with proper error handling
+    echo "Installing Docker Compose..."
     COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    sudo curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
+    if [ -z "$COMPOSE_VERSION" ]; then
+        echo "Failed to get Docker Compose version. Using latest as fallback."
+        COMPOSE_VERSION="latest"
+    fi
+    
+    if ! wait_for_command 120 "curl -L 'https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)' -o /usr/local/bin/docker-compose" "Downloading Docker Compose"; then
+        echo "Failed to download Docker Compose"
+        exit 1
+    fi
+    chmod +x /usr/local/bin/docker-compose
 
-    # Setting up Portainer
+    # Setting up Portainer with proper checks
     if [ ! -f "$USER_HOME/docker-compose-portainer.yml" ]; then
         echo "docker-compose-portainer.yml file not found in $USER_HOME. Skipping Portainer setup."
     else
-        sudo -H -u $REAL_USER bash -c 'docker-compose -f "$HOME/docker-compose-portainer.yml" up -d'
+        if ! wait_for_command 180 "sudo -H -u $REAL_USER bash -c 'docker-compose -f \"$USER_HOME/docker-compose-portainer.yml\" up -d'" "Starting Portainer"; then
+            echo "Failed to start Portainer"
+            exit 1
+        fi
         echo "Portainer has been started with Docker Compose for easy Docker container management."
     fi
     echo "Finished setting up Docker and Portainer."
@@ -66,7 +104,10 @@ if [[ "$install_nginx_proxy_manager" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     if [ ! -f "$USER_HOME/docker-compose-nginx-proxy-manager.yml" ]; then
         echo "docker-compose-nginx-proxy-manager.yml file not found in $USER_HOME. Skipping NGINX Proxy Manager setup."
     else
-        sudo -H -u $REAL_USER bash -c 'docker-compose -f "$HOME/docker-compose-nginx-proxy-manager.yml" up -d'
+        if ! wait_for_command 180 "sudo -H -u $REAL_USER bash -c 'docker-compose -f \"$USER_HOME/docker-compose-nginx-proxy-manager.yml\" up -d'" "Starting NGINX Proxy Manager"; then
+            echo "Failed to start NGINX Proxy Manager"
+            exit 1
+        fi
         echo "NGINX Proxy Manager has been started with Docker Compose."
     fi
 else
@@ -133,10 +174,30 @@ EOF
 
     echo ".env file created successfully."
 
-    # The rest of your script follows
+    # Function to handle WordPress installation with proper error handling
+    install_wordpress() {
+        local retries=3
+        local wait_time=10
+        
+        while [ $retries -gt 0 ]; do
+            if docker-compose -f docker-compose-wordpress.yml up -d; then
+                echo "WordPress services started successfully"
+                return 0
+            fi
+            
+            echo "Failed to start WordPress services. Retrying in $wait_time seconds..."
+            docker-compose -f docker-compose-wordpress.yml down
+            sleep $wait_time
+            ((retries--))
+        done
+        
+        echo "Failed to start WordPress services after multiple attempts"
+        return 1
+    }
+
     if [ -f "./docker-compose-wordpress.yml" ]; then
         echo "Starting WordPress services using Docker Compose..."
-        sudo docker-compose -f docker-compose-wordpress.yml up -d
+        install_wordpress
         echo "WordPress has been started."
     else
         echo "docker-compose-wordpress.yml file not found."
@@ -145,8 +206,6 @@ EOF
 else
     echo "Skipping WordPress installation."
 fi
-
-
 
 # Ask if the user wants to proceed with ERPNext installation
 echo "Do you want to proceed with ERPNext installation? (Y/n)"
@@ -174,16 +233,44 @@ if [[ "$install_erpnext" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
   echo "Please enter your email:"
   read email
 
+  # Function to handle ERPNext installation with proper handling of interactive prompts
+  install_erpnext() {
+    # Create a temporary expect script for handling interactive prompts
+    cat > /tmp/erpnext_install.exp << 'EOF'
+#!/usr/bin/expect -f
+set timeout -1
+spawn python3 easy-install.py --prod --project "[lindex $argv 0]" --email "[lindex $argv 1]"
+
+expect {
+    "Do you want to continue?" {
+        send "y\r"
+        exp_continue
+    }
+    "Please enter your password:" {
+        send "[lindex $argv 2]\r"
+        exp_continue
+    }
+    eof
+}
+EOF
+    chmod +x /tmp/erpnext_install.exp
+    
+    # Run the expect script
+    if ! wait_for_command 1800 "/tmp/erpnext_install.exp \"$project_name\" \"$email\" \"$password\"" "Installing ERPNext"; then
+        echo "ERPNext installation failed"
+        rm -f /tmp/erpnext_install.exp
+        exit 1
+    fi
+    rm -f /tmp/erpnext_install.exp
+  }
+
   # Running the installation as the real user
-  sudo -u "$REAL_USER" bash -c "cd $erpnext_dir && python3 easy-install.py --prod --project \"$project_name\" --email \"$email\""
+  sudo -u "$REAL_USER" bash -c "cd $erpnext_dir && install_erpnext"
   
   echo "ERPNext has been installed."
 else
   echo "ERPNext installation skipped."
 fi
-
-
-
 
 # Prompt for NADOO-IT service installation
 echo "Do you want to install the NADOO-IT service? (Y/n)"
@@ -262,8 +349,6 @@ else
     echo "NADOO-IT service installation skipped."
 fi
 
-
-
 # Prompt for RustDesk Server OSS installation
 echo "Do you want to install RustDesk Server OSS using Docker Compose? (Y/n)"
 read install_rustdesk
@@ -280,7 +365,10 @@ if [[ "$install_rustdesk" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
     # Assuming the docker-compose file is named docker-compose-rustdesk.yml and located in the same directory as the setup script
     if [ -f "./docker-compose-rustdesk.yml" ]; then
         echo "Starting RustDesk services using Docker Compose..."
-        sudo docker-compose -f docker-compose-rustdesk.yml up -d
+        if ! wait_for_command 180 "docker-compose -f docker-compose-rustdesk.yml up -d" "Starting RustDesk Server OSS"; then
+            echo "Failed to start RustDesk Server OSS"
+            exit 1
+        fi
         echo "RustDesk Server OSS has been started."
     else
         echo "docker-compose-rustdesk.yml file not found."
@@ -289,6 +377,5 @@ if [[ "$install_rustdesk" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
 else
     echo "Skipping RustDesk Server OSS installation."
 fi
-
 
 echo "Setup completed."

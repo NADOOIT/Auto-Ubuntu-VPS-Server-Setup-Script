@@ -1,0 +1,59 @@
+{
+  "servers": [
+    {
+      "name": "nadoo_it",
+      "ip": "@nadooit.de",
+      "user": "nadooit_server",
+      "port": "22",
+      "services": []
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": false,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": true,
+      "setup_date": "2024-11-24"
+    },
+    {
+      "ip": "87.106.152.81",
+      "admin_user": "nadoo_admin",
+      "password_auth": true,
+      "setup_date": "2024-11-24"
+    }
+  ]
+}

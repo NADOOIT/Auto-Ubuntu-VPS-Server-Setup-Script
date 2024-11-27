@@ -1,4 +1,6 @@
-
 config.txt
 server_setup.config
 server_setup copy.config
+
+# Mail configuration
+tests/docker/mail_config.env

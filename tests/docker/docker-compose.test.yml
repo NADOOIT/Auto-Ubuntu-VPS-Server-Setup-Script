@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: ubuntu-test-server
+    environment:
+      - TEST_SERVER_HOST=localhost
+      - TEST_SERVER_USER=testuser
+      - TEST_SERVER_PASS=testpassword
+    ports:
+      - "2222:22"
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ../..:/app
+      - ./backup:/backup
+      - ./sqlite_data:/var/backup/sqlite
+    privileged: true
+    networks:
+      - test-network
+
+  test-runner:
+    image: ubuntu:22.04
+    container_name: test-runner
+    depends_on:
+      - test-server
+    volumes:
+      - ../..:/app
+    working_dir: /app
+    environment:
+      - TEST_SERVER_HOST=test-server
+      - TEST_SERVER_PORT=22
+      - TEST_SERVER_USER=testuser
+      - TEST_SERVER_PASS=testpassword
+    command: >
+      bash -c "
+        echo 'Test environment is ready.' &&
+        echo 'You can now access the test server at:' &&
+        echo '  SSH: localhost:2222' &&
+        echo '  HTTP: localhost:8080' &&
+        echo '  HTTPS: localhost:8443' &&
+        echo 'Using credentials:' &&
+        echo '  Username: testuser' &&
+        echo '  Password: testpassword' &&
+        tail -f /dev/null
+      "
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge

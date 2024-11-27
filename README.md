@@ -1,216 +1,154 @@
 # Auto Ubuntu VPS Server Setup Script
 
-This script is a tool designed to simplify the process of setting up your Ubuntu VPS server. It manages the installation of essential packages, Docker, Docker Compose, and, if you want, ERPNext.
+This script is a comprehensive tool for managing multiple Ubuntu VPS servers. It handles installation and management of essential services, including Docker, Docker Compose, ERPNext, and NADOO-IT services.
 
-This guide aims to assist absolute beginners in using the script.
+## Quick Start
 
-## Preparations
+1. Clone this repository:
+```bash
+git clone https://github.com/NADOOIT/Auto-Ubuntu-VPS-Server-Setup-Script.git
+cd Auto-Ubuntu-VPS-Server-Setup-Script
+```
 
-Before you can use the setup script, you need to perform some initial configurations on your Ubuntu VPS server:
+2. Make the scripts executable:
+```bash
+chmod +x manage_servers.sh lib/service_manager.sh
+```
 
-1. **Log in to your server using SSH**:
+3. Run the management interface:
+```bash
+./manage_servers.sh
+```
 
-    To connect to your server, you will need a client application that supports the Secure Shell (SSH) protocol. For Windows users, PowerShell provides an easy way to use SSH. For macOS and Linux, the Terminal application has built-in SSH support.
+## Features
 
-    - **On Windows**: Press the Windows key, type 'PowerShell', and press 'Enter'. This will launch Windows PowerShell. Use the following command to connect to your server:
+- **Multiple Server Management**
+  - Add and remove servers
+  - Store server configurations
+  - Track installed services per server
 
-        ```bash
-        ssh root@your_server_ip
-        ```
+- **Service Management**
+  - Docker and Docker Compose
+  - NGINX Proxy Manager
+  - Portainer
+  - WordPress
+  - ERPNext
+  - NADOO-IT Services
+  - RustDesk Server
 
-        Replace `your_server_ip` with the IP address of your server. The initial user is usually 'root', but if you are using a GDPR-compliant provider like IONOS, you can find the initial user and password in your VPS overview.
+- **NADOO-IT Service Management**
+  - Automated backups
+  - Safe updates with rollback capability
+  - Database management
 
-        If you encounter an error message saying `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`, this is due to the SSH client recognizing that the server's fingerprint doesn't match the one it has recorded in the `known_hosts` file. This typically happens when you've reinstalled or reset your server. To resolve this, remove the offending key with this command:
+- **SSH Key Management**
+  - Automatic key generation and distribution
+  - Password-less authentication
+  - Secure connection management
 
-        ```bash
-        ssh-keygen -R "your_server_ip"
-        ```
+## Prerequisites
 
-        After running this command, you should be able to connect to your server again.
+Before using the script, ensure you have:
+- A Unix-like operating system (Linux/macOS)
+- SSH client installed
+- `jq` command-line JSON processor
+- `expect` for handling interactive prompts
+- `sqlite3` for database management
 
-    - **On macOS and Linux**: Open Terminal and type the following command, then press 'Enter'. Replace `root` with your server's username and `your_server_ip` with the IP address of your server.
+The script will automatically check for and install missing requirements.
 
-        ```bash
-        ssh root@your_server_ip
-        ```
+## Using the Management Interface
 
-        If you encounter an error similar to `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`, you can use the following command to remove the offending key:
+1. **Adding a Server**
+   - Select "Add Server" from the main menu
+   - Enter server details (name, IP, SSH user)
+   - The system will automatically configure SSH access
 
-        ```bash
-        ssh-keygen -R "your_server_ip"
-        ```
+2. **Managing Services**
+   - Select "Manage Server Services" from the main menu
+   - Choose a server to manage
+   - Install or remove services as needed
+   - Update and backup NADOO-IT services
 
-2. **Create a new user account with sudo privileges**:
+3. **SSH Access**
+   - The system automatically manages SSH keys
+   - First-time connection requires password
+   - Subsequent connections are password-less
+   - Keys are stored securely in `~/.ssh/`
 
-   On your server, create a new user account and grant it sudo privileges. This will be the user account you'll use to run the script. Here is an example of creating a new user named `your_username` and adding it to the sudo group:
+## SSH Key Management
 
+The script handles SSH key management automatically:
+
+1. **First-time Setup**
    ```bash
-    adduser your_username
-    usermod -aG sudo your_username
-    sudo groupadd docker
-    usermod -aG docker your_username
+   ./manage_servers.sh
    ```
+   - Select "Add Server"
+   - Enter server details
+   - The system will:
+     - Generate SSH key if needed
+     - Copy public key to server
+     - Configure password-less authentication
 
-   Make sure to replace `your_username` with the username you want.
-
-3. **Install Git on your server**:
-
-   The setup script requires Git to clone the necessary repositories. Install Git by running:
-
+2. **Manual SSH Access**
    ```bash
-   sudo apt update
-   sudo apt upgrade
-   sudo apt install git
-   reboot
+   ./manage_servers.sh ssh <server-name>
    ```
+   Or use the interactive menu:
+   - Select "SSH to Server" from the main menu
+   - Choose the server to connect to
 
-## How to use the script
+## Backup and Update Procedures
 
-After preparing your server, you can use the setup script as follows:
+### NADOO-IT Services
 
-1. **Log in to your server using SSH**:
+1. **Backup**
+   - Automatically performed before updates
+   - Stored in `config/backups/`
+   - Includes SQLite database
+   - Timestamped for easy reference
 
-    To connect to your server, you will need a client application that supports the Secure Shell (SSH) protocol. For Windows users, PowerShell provides an easy way to use SSH. For macOS and Linux, the Terminal application has built-in SSH support.
+2. **Update**
+   - Creates backup automatically
+   - Stashes local changes
+   - Pulls latest updates
+   - Automatic rollback on failure
 
-    - **On Windows**: Press the Windows key, type 'PowerShell', and press 'Enter'. This will launch Windows PowerShell.
+### Service Configuration
 
-        You can generate an SSH key pair directly in PowerShell. Just paste the following command and press 'Enter':
+All service configurations are stored in:
+- `config/servers.json` - Server configurations
+- `config/backups/` - Service backups
+- Docker Compose files in the root directory
 
-        ⚠️ WARNING: If an SSH key already exists at the default location, DO NOT overwrite it. Doing so could invalidate your key on any systems where it's currently in use and potentially lock you out. So if asked to overwirte the key, type 'n' and press 'Enter'.
-        Just skip to the next step if you already have an SSH key pair.
+## Troubleshooting
 
-        ```bash
-        ssh-keygen
-        ```
+1. **SSH Connection Issues**
+   - Check server IP and credentials
+   - Ensure SSH service is running
+   - Verify firewall settings
+   - Use "Reset SSH Key" option if needed
 
-        It will ask for a location to save the keys and a passphrase for added security. You can press 'Enter' to accept the default location and skip the passphrase, but using a passphrase is recommended for added security.
+2. **Service Installation Failures**
+   - Check server connectivity
+   - Verify system requirements
+   - Check disk space
+   - Review logs in `config/logs/`
 
-        Next, log in to your server and create the `.ssh` directory and the `authorized_keys` file if they don't exist. Use this command:
+3. **Update Failures**
+   - Automatic rollback will restore previous state
+   - Check backup directory for database restore
+   - Review update logs
+   - Contact support if needed
 
-        ```bash
-        ssh your_username@your_server_ip "mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys"
-        ```
+## Contributing
 
-        After that, you can copy your public key to your server with the command:
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
-        ```bash
-        type $env:USERPROFILE\.ssh\id_rsa.pub | ssh your_username@your_server_ip "cat >> .ssh/authorized_keys"
-        ```
+## License
 
-        Replace `your_username` and `your_server_ip` with your server's username and IP address respectively. The public key is now added to the list of authorized keys on your server. After this, you can log in to your server without a password.
-
-        To login to your server, use the command:
-
-        ```bash
-        ssh your_username@your_server_ip
-        ```
-
-    - **On macOS and Linux**: Open Terminal and type the following command, then press 'Enter'. Replace `your_username` with your server's username and `your_server_ip` with the IP address of your server.
-
-        ⚠️ WARNING: If an SSH key already exists at the default location, DO NOT overwrite it. Doing so could invalidate your key on any systems where it's currently in use and potentially lock you out. So if asked to overwirte the key, type 'n' and press 'Enter'.
-        Just skip to the next step if you already have an SSH key pair.
-
-        ```bash
-        ssh your_username@your_server_ip
-        ```
-
-        If you want to set up SSH key-based authentication, follow these commands:
-
-        ```bash
-        ssh-keygen
-        ssh-copy-id your_username@your_server_ip
-        ```
-
-    The rest of the steps remain the same as mentioned in the previous guide.
-
-2. **Clone the repository containing the script**:
-
-   After logging in, clone the repository with the setup script:
-
-   ```bash
-        git clone https://github.com/NADOOIT/Auto-Ubuntu-VPS-Server-Setup-Script.git
-        cd Auto-Ubuntu-VPS-Server-Setup-Script
-   ```
-
-3. **Make the script executable**:
-
-   The next step is to give the file `setup.sh`, the permission to execute as a program. If you skip this step, the system will refuse to run the script and will give you a 'Permission Denied' error.
-
-   ```bash
-   chmod +x setup.sh
-   ```
-
-4. **Run the setup script**:
-
-   Now you can run the script. This will install Docker, Docker Compose, and, if you choose, ERPNext.
-
-   ```bash
-   sudo ./setup.sh
-   ```
-
-   You will be asked if you want to install ERPNext. If you want to install it, type 'yes'; otherwise, type 'no'.
-
-## Accessing Installed Applications
-
-After the script is done:
-
-- **Portainer**: You can access Portainer, which allows you to manage Docker containers, at `http://your-server-ip:9000` in a web browser.
-- **ERPNext**: If you chose to install ERPNext, it's available at `http://your-server-ip` once the Docker containers are operational. If you can't access ERPNext, check whether the Docker containers are running properly.
-
-## Installing RustDesk Server OSS with Docker
-
-This script also supports setting up RustDesk Server OSS, a comprehensive remote desktop software, using Docker. Follow these steps to install RustDesk Server on your Ubuntu VPS.
-
-### RustDesk Server OSS Requirements
-
-Ensure Docker is installed on your server. RustDesk Server requires specific ports to be open:
-
-- **TCP Ports**: 21115, 21116, 21117, 21118, 21119
-- **UDP Port**: 21116
-
-These ports facilitate various RustDesk services, including NAT testing, ID registration, heartbeat service, TCP hole punching, connection service, and relay services. Ports 21118 and 21119 are for web client support and can be disabled if not needed.
-
-### Installation Steps
-
-1. **Open Required Ports**: Open the required ports in your server's firewall to enable RustDesk functionality and external connectivity. Use the following commands:
-
-   ```bash
-   sudo ufw allow 21115/tcp
-   sudo ufw allow 21116/tcp
-   sudo ufw allow 21116/udp
-   sudo ufw allow 21117/tcp
-   sudo ufw allow 21118/tcp
-   sudo ufw allow 21119/tcp
-   sudo ufw reload
-   ```
-
-   Note: If you're not using UFW (Uncomplicated Firewall), adjust these commands according to your firewall configuration.
-
-2. **Deploy RustDesk using Docker Compose**: Navigate to the directory containing the `docker-compose-rustdesk.yml` file. Run the Docker Compose file to start RustDesk Server OSS components in detached mode:
-
-   ```bash
-   sudo docker-compose -f docker-compose-rustdesk.yml up -d
-   ```
-
-3. **Retrieve the Server Key**: After starting the RustDesk services, you need to retrieve the server key. This key is essential for configuring RustDesk clients to connect to your server. To get the key, check the logs of the `hbbs` container:
-
-   ```bash
-   docker logs hbbs
-   ```
-
-   Look for a line that starts with "Key:". It should look something like this:
-
-   ```
-   Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-   ```
-
-   Replace 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=' with the actual key you see in the logs. This key needs to be added to the RustDesk client settings along with your server's address.
-
-4. **Configure RustDesk Clients**: On each RustDesk client that you want to connect to this server:
-   - Open RustDesk settings
-   - Go to the "Network" tab
-   - Set the "ID Server" to your server's address (e.g., rust.nadooit.de)
-   - Set the "Key" field to the key you retrieved from the server logs
-   - Click "Apply" to save the settings
-
-By following these steps, you should have a functioning RustDesk Server OSS installation, with the necessary ports open and the correct key configuration for client connections.
+This project is licensed under the MIT License - see the LICENSE file for details.

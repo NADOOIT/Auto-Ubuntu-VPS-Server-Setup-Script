@@ -15,10 +15,11 @@ setup_ssl() {
     
     # Configure Nginx for domain
     echo -e "\n⚙️ Configuring Nginx for $domain..."
-    ssh "$admin_user@$server_ip" "sudo bash -c 'cat > /etc/nginx/sites-available/'\"\$domain\"' << EOF
+    # shellcheck disable=SC2029
+    ssh "$admin_user@$server_ip" "sudo bash -c 'cat > /etc/nginx/sites-available/\$domain << EOF
 server {
     listen 80;
-    server_name '\"\$domain\"' www.'\"\$domain\"';
+    server_name \$domain www.\$domain;
     
     location / {
         proxy_pass http://localhost:8000;
@@ -29,12 +30,14 @@ server {
 EOF'"
 
     # Enable site
-    ssh "$admin_user@$server_ip" "sudo ln -sf /etc/nginx/sites-available/'\"\$domain\"' /etc/nginx/sites-enabled/"
+    # shellcheck disable=SC2029
+    ssh "$admin_user@$server_ip" "sudo ln -sf /etc/nginx/sites-available/\$domain /etc/nginx/sites-enabled/"
     ssh "$admin_user@$server_ip" "sudo nginx -t && sudo systemctl reload nginx"
     
     # Get SSL certificate
     echo -e "\n🔑 Obtaining SSL certificate..."
-    ssh "$admin_user@$server_ip" "sudo certbot --nginx -d '\"\$domain\"' -d www.'\"\$domain\"' --non-interactive --agree-tos --email christoph.backhaus@nadooit.de"
+    # shellcheck disable=SC2029
+    ssh "$admin_user@$server_ip" "sudo certbot --nginx -d \$domain -d www.\$domain --non-interactive --agree-tos --email christoph.backhaus@nadooit.de"
     
     # Setup auto-renewal cron job
     echo -e "\n⏰ Setting up automatic renewal..."

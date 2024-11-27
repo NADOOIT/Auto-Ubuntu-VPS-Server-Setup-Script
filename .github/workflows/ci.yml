@@ -19,7 +19,6 @@ jobs:
     
     - name: Run shellcheck
       run: |
-        shellcheck manage_servers.sh
         shellcheck ssl_manager.sh
         shellcheck auth_methods.sh
         shellcheck tests/*.sh
@@ -101,7 +100,6 @@ jobs:
     - name: Package scripts
       run: |
         tar -czf nadoo-server-management.tar.gz \
-          manage_servers.sh \
           ssl_manager.sh \
           auth_methods.sh \
           README.md \
